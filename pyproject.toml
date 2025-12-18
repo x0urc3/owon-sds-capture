@@ -1,0 +1,16 @@
+[project]
+name = "owon-sds-capture"
+version = "1.0.0"
+description = "A Python utility to control Owon PDS series oscilloscopes."
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = [
+    "pyusb>=1.2.0",
+]
+
+[project.scripts]
+owon-sds-capture = "cli:main"
+
+[tool.setuptools]
+py-modules = ["cli", "constants", "device", "usb_interface"]
+package-dir = {"" = "src"}
