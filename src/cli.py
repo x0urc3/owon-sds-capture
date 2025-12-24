@@ -89,7 +89,7 @@ def main():
 
     # Import device and usb after setting up logging and environment
     import usb.core
-    from device import OwonDevice
+    from control import OwonDevice
 
     try:
         with OwonDevice() as device:

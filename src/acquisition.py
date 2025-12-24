@@ -20,8 +20,8 @@ import struct
 import time
 from usb.core import USBError
 
-from src.usb_interface import USBInterface
-from src.constants import BULK_READ_ENDPOINT
+from usb_interface import USBInterface
+from constants import BULK_READ_ENDPOINT
 
 # Data acquisition commands from ref/owon-sds7102-protocol/usb.c
 ACQ_COMMANDS = {
