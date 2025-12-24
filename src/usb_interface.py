@@ -101,6 +101,28 @@ class USBInterface:
             # Consider re-raising or handling more gracefully
             raise
 
+    def read(self, size: int, timeout: int = 1000) -> bytes:
+        """
+        Reads data from the device's bulk read endpoint.
+
+        Args:
+            size: The number of bytes to read.
+            timeout: The timeout for the read operation in milliseconds.
+
+        Returns:
+            The bytes read from the oscilloscope.
+        """
+        if self.device is None:
+            raise ConnectionError("Device not connected. Cannot read data.")
+
+        try:
+            return self.device.read(constants.BULK_READ_ENDPOINT, size, timeout)
+        except usb.core.USBError as e:
+            # A timeout error is expected if the device has no data to send.
+            # It's better to let the caller handle it.
+            logging.warning(f"Error reading from device: {e}")
+            raise
+
     def __enter__(self):
         """Context manager entry point."""
         self.connect()
