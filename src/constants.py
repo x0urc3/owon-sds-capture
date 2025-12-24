@@ -1,6 +1,6 @@
 """
-owon-sds-grok
-Copyright (C) 2025 Khairulmizam <xource@gmail.com>
+owon-sds-capture
+Copyright (C) 2025 Khairulmizam Samsudin <xource@gmail.com>
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -154,6 +154,13 @@ class VideoSync(Enum):
     LINE_NO = 4
 
 # --- Raw Command Bytes ---
+
+class CMD_ACQ(Enum):
+    """Data acquisition commands."""
+    BMP = b'STARTBMP'
+    BIN = b'STARTBIN'
+    MEMDEPTH = b'STARTMEMDEPTH'
+    DEBUGTXT = b'STARTDEBUGTXT'
 
 CMD_AUTOSET           = b'\x3a\x53\x44\x53\x4c\x41\x55\x54\x23'
 CMD_SELF_CAL          = b'\x3a\x53\x44\x53\x4c\x43\x52\x53\x23'
