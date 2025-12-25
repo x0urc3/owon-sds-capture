@@ -19,6 +19,8 @@ import struct
 import logging
 import constants
 from usb_interface import USBInterface
+from data_parser import OwonHeader
+from acquisition import acquire_raw_data
 
 class OwonDevice:
     """
@@ -200,6 +202,30 @@ class OwonDevice:
             cmd[21] = sync.value
 
         self._send_command(bytes(cmd))
+
+    def get_waveform(self, mode: str = 'bin') -> OwonHeader:
+        """
+        Acquires, parses, and returns the waveform data from the oscilloscope.
+
+        Args:
+            mode: The type of data to acquire ('bin' for waveform, 'bmp' for screenshot).
+
+        Returns:
+            An OwonHeader object containing the parsed header, channel metadata, and data points.
+        """
+        logging.info(f"Starting waveform acquisition in '{mode}' mode...")
+        raw_data = acquire_raw_data(self.usb, mode)
+
+        if not raw_data:
+            logging.error("Failed to acquire waveform data (received empty response).")
+            # Return an empty header object to avoid crashes
+            return OwonHeader()
+
+        logging.info("Raw data acquired. Parsing waveform data...")
+        parsed_data = parse_waveform_data(raw_data)
+        logging.info("Waveform data parsed successfully.")
+
+        return parsed_data
 
     def __enter__(self):
         """Context manager entry point."""

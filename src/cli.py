@@ -48,6 +48,13 @@ def main():
     parser.add_argument("--acq-mode", type=str, choices=[m.name for m in constants.AcquisitionMode], help="Set acquisition mode.")
     parser.add_argument("--acq-samples", type=str, choices=[s.name for s in constants.AverageSamples], default='SAMPLES_16', help="Set number of samples for Average mode. Used only with --acq-mode AVERAGE. Defaults to SAMPLES_16.")
 
+    # --- Data Acquisition Arguments ---
+    acquisition_group = parser.add_argument_group('Data Acquisition', 'Arguments for acquiring waveform data.')
+    acquisition_group.add_argument("--get-waveform", action="store_true",
+                                   help="Acquire waveform data from the oscilloscope.")
+    acquisition_group.add_argument("--output", type=str, metavar='<filename.csv>',
+                                   help="Output file to save waveform data as CSV. Used with --get-waveform.")
+
     # --- Trigger Configuration Arguments ---
     trigger_group = parser.add_argument_group('Trigger Configuration', 'Arguments for setting up edge or video triggers.')
     trigger_group.add_argument("--trigger-type", nargs=2, metavar=('CHANNEL', 'TYPE'),
@@ -90,9 +97,22 @@ def main():
     # Import device and usb after setting up logging and environment
     import usb.core
     from control import OwonDevice
+    from data_parser import export_to_csv
 
     try:
         with OwonDevice() as device:
+            # Handle Waveform Acquisition first as it's a primary action
+            if args.get_waveform:
+                if not args.output:
+                    parser.error("--output <filename.csv> is required when using --get-waveform.")
+
+                waveform_data = device.get_waveform()
+                if waveform_data and waveform_data.channels:
+                    export_to_csv(waveform_data, args.output)
+                else:
+                    logging.error("Could not export CSV: No waveform data was acquired or parsed.")
+                return
+
             # Handle Trigger Configuration first as it's complex
             if args.trigger_type:
                 channel_str, trigger_type = args.trigger_type

@@ -135,7 +135,7 @@ def parse_waveform_data(raw_data: bytes) -> OwonHeader:
     # Read model (6 bytes + null terminator)
     header.model = raw_data[offset:offset+6].decode('ascii', errors='ignore').strip('\x00')
     offset += 7
-    
+
     header.int_size = struct.unpack_from('<i', raw_data, offset)[0]
     offset += 4
 
@@ -158,18 +158,18 @@ def parse_waveform_data(raw_data: bytes) -> OwonHeader:
     while (channel_offset := raw_data.find(b'CH', offset)) != -1:
         offset = channel_offset
         ch = OwonChannel()
-        
+
         ch.name = raw_data[offset:offset+3].decode('ascii', errors='ignore').strip('\x00')
         offset += 4
-        
+
         ch.unknown_int, ch.datatype = struct.unpack_from('<ii', raw_data, offset)
         offset += 8
         ch.unknown_4 = raw_data[offset:offset+4]
         offset += 4
-        
+
         ch.samples_count, ch.samples_file, ch.samples_3 = struct.unpack_from('<III', raw_data, offset)
         offset += 12
-        
+
         time_div_idx, volts_div_idx, atten_idx = struct.unpack_from('<III', raw_data, offset)
         ch.time_div = _get_real_from_table(_TIMESCALE_TABLE, time_div_idx)
         ch.volts_div = _get_real_from_table(_VOLT_TABLE, volts_div_idx)
@@ -196,7 +196,7 @@ def parse_waveform_data(raw_data: bytes) -> OwonHeader:
                 sample = struct.unpack_from('<b', raw_data, offset)[0]
                 offset += 1
             raw_samples.append(sample)
-        
+
         # Convert raw samples to physical units
         for i, sample in enumerate(raw_samples):
             ch.time_points.append(_sample_id_to_time(ch, i))
@@ -219,7 +219,7 @@ def export_to_csv(header: OwonHeader, file_path: str):
         return
 
     logging.info(f"Exporting waveform data to {file_path}...")
-    
+
     with open(file_path, 'w', newline='') as f:
         # Write CSV header
         csv_header = "time"
@@ -238,5 +238,5 @@ def export_to_csv(header: OwonHeader, file_path: str):
                 else:
                     row.append("") # Append empty string if a channel has fewer points
             f.write(",".join(row) + '\n')
-            
+
     logging.info("CSV export complete.")
