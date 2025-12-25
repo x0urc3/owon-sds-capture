@@ -21,15 +21,8 @@ import time
 from usb.core import USBError
 
 from usb_interface import USBInterface
-from constants import BULK_READ_ENDPOINT
+from constants import BULK_READ_ENDPOINT, CMD_ACQ
 
-# Data acquisition commands from ref/owon-sds7102-protocol/usb.c
-ACQ_COMMANDS = {
-    'bmp': b'STARTBMP',
-    'bin': b'STARTBIN',
-    'memdepth': b'STARTMEMDEPTH',
-    'debugtxt': b'STARTDEBUGTXT',
-}
 
 def acquire_raw_data(usb_interface: USBInterface, mode: str = 'bin') -> bytes:
     """
@@ -47,10 +40,11 @@ def acquire_raw_data(usb_interface: USBInterface, mode: str = 'bin') -> bytes:
         ValueError: If the acquisition mode is invalid.
         ConnectionError: If there's a problem communicating with the device.
     """
-    if mode not in ACQ_COMMANDS:
-        raise ValueError(f"Invalid acquisition mode '{mode}'. Valid modes are: {list(ACQ_COMMANDS.keys())}")
-
-    start_command = ACQ_COMMANDS[mode]
+    try:
+        start_command = CMD_ACQ[mode.upper()].value
+    except KeyError:
+        valid_modes = [m.name.lower() for m in CMD_ACQ]
+        raise ValueError(f"Invalid acquisition mode '{mode}'. Valid modes are: {valid_modes}") from None
 
     logging.info(f"Sending data acquisition command: {start_command.decode()}")
     usb_interface.write(start_command)

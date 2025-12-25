@@ -155,6 +155,13 @@ class VideoSync(Enum):
 
 # --- Raw Command Bytes ---
 
+class CMD_ACQ(Enum):
+    """Data acquisition commands."""
+    BMP = b'STARTBMP'
+    BIN = b'STARTBIN'
+    MEMDEPTH = b'STARTMEMDEPTH'
+    DEBUGTXT = b'STARTDEBUGTXT'
+
 CMD_AUTOSET           = b'\x3a\x53\x44\x53\x4c\x41\x55\x54\x23'
 CMD_SELF_CAL          = b'\x3a\x53\x44\x53\x4c\x43\x52\x53\x23'
 CMD_FACTORY_RESET     = b'\x3a\x53\x44\x53\x4c\x44\x46\x54\x23'

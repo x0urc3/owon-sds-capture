@@ -93,7 +93,7 @@ class USBInterface:
         """
         if self.device is None:
             raise ConnectionError("Device not connected. Cannot write data.")
-        
+
         try:
             self.device.write(constants.BULK_WRITE_ENDPOINT, data)
         except usb.core.USBError as e:
