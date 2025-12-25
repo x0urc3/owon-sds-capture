@@ -96,11 +96,11 @@ def main():
 
     # Import device and usb after setting up logging and environment
     import usb.core
-    from control import OwonDevice
+    from device import SDSDevice
     from data_parser import export_to_csv
 
     try:
-        with OwonDevice() as device:
+        with SDSDevice() as device:
             # Handle Waveform Acquisition first as it's a primary action
             if args.get_waveform:
                 if not args.output:

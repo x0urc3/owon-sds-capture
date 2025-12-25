@@ -22,7 +22,7 @@ from usb_interface import USBInterface
 from data_parser import OwonHeader
 from acquisition import acquire_raw_data
 
-class OwonDevice:
+class SDSDevice:
     """
     A high-level controller for the Owon PDS series oscilloscope.
     """
