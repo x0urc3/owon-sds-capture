@@ -21,9 +21,6 @@ import logging
 from dataclasses import dataclass, field
 from typing import List
 
-# --- Data Structures (Task 2.3) ---
-# Mirrored from parse.h
-
 @dataclass
 class OwonChannel:
     """Holds the parsed data and metadata for a single channel."""
@@ -62,9 +59,6 @@ class OwonHeader:
     unknown_3: bytes = b''
     channels: List[OwonChannel] = field(default_factory=list)
 
-# --- Lookup Tables (Task 2.4) ---
-# Ported from parse.c
-
 _ATTENUATION_TABLE = [1.0e0, 1.0e1, 1.0e2, 1.0e3]
 _VOLT_TABLE = [
     2.0e-2, 5.0e-2,  # 10 mV
@@ -93,8 +87,6 @@ def _get_real_from_table(table: list, index: int) -> float:
     if index >= len(table):
         return table[-1]
     return table[index]
-
-# --- Helper Functions (Task 2.10) ---
 
 def _sample_to_volt(channel: OwonChannel, sample_value: int) -> float:
     """Converts a raw sample value to volts."""
@@ -125,9 +117,6 @@ def parse_response_header(header_data: bytes) -> tuple[int, int, int]:
     length, unknown, flag = struct.unpack_from('<III', header_data)
     logging.debug(f"Response: length={length}, unknown={unknown}, flag={flag}")
     return length, unknown, flag
-
-
-# --- Main Parsing Logic (Tasks 2.5-2.12) ---
 
 def parse_waveform_data(raw_data: bytes) -> OwonHeader:
     """
@@ -217,8 +206,6 @@ def parse_waveform_data(raw_data: bytes) -> OwonHeader:
         logging.info(f"Finished parsing channel {ch.name}. Found {len(ch.volt_points)} data points.")
 
     return header
-
-# --- CSV Export (Task 2.13) ---
 
 def export_to_csv(header: OwonHeader, file_path: str):
     """

@@ -235,7 +235,7 @@ class SDSDevice:
         try:
             # Read the 12-byte response header
             header_data = self.usb.read(12, timeout=5000)
-            logging.debug(f"Received response header: {header_data.hex(' ')}")
+            logging.debug(f"Received response header: {header_data}")
 
             length, _, flag = parse_response_header(header_data)
 
