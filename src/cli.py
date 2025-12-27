@@ -52,8 +52,10 @@ def main():
     acquisition_group = parser.add_argument_group('Data Acquisition', 'Arguments for acquiring waveform data.')
     acquisition_group.add_argument("--get-waveform", action="store_true",
                                    help="Acquire waveform data from the oscilloscope.")
-    acquisition_group.add_argument("--output", type=str, metavar='<filename.csv>',
-                                   help="Output file to save waveform data as CSV. Used with --get-waveform.")
+    acquisition_group.add_argument("--output", type=str, metavar='<filename>',
+                                   help="Output file to save waveform data. If omitted, a timestamped filename is generated.")
+    acquisition_group.add_argument("--format", type=str, choices=['csv', 'bin'], default='csv',
+                                   help="Output format for waveform data. 'csv' for processed data, 'bin' for raw data. Defaults to csv.")
 
     # --- Trigger Configuration Arguments ---
     trigger_group = parser.add_argument_group('Trigger Configuration', 'Arguments for setting up edge or video triggers.')
@@ -97,7 +99,7 @@ def main():
     # Import device and usb after setting up logging and environment
     import usb.core
     from device import SDSDevice
-    from data_parser import export_to_csv
+    from data_parser import export_to_csv, export_to_binary
 
     try:
         with SDSDevice() as device:
