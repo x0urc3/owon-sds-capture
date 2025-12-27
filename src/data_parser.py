@@ -150,10 +150,8 @@ def parse_waveform_data(raw_data: bytes) -> OwonHeader:
         header.unknown_value_2 = struct.unpack_from('<B', raw_data, offset)[0]
         offset += 1
         header.unknown_3 = raw_data[offset:offset+8]
-        offset += 8
 
     logging.debug(f"Parsed main header. Model: {header.model}, Serial: {header.serial}")
-    import pdb; pdb.set_trace()
 
     # Search for and parse channel data
     while (channel_offset := raw_data.find(b'CH', offset)) != -1:
