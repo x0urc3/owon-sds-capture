@@ -1,7 +1,7 @@
 
 """
-owon-sds-grok
-Copyright (C) 2025 Khairulmizam <xource@gmail.com>
+owon-sds-capture
+Copyright (C) 2025 Khairulmizam Samsudin <xource@gmail.com>
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
