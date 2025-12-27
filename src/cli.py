@@ -103,12 +103,15 @@ def main():
         with SDSDevice() as device:
             # Handle Waveform Acquisition first as it's a primary action
             if args.get_waveform:
-                if not args.output:
-                    parser.error("--output <filename.csv> is required when using --get-waveform.")
+                from datetime import datetime
+                output_filename = args.output
+                if not output_filename:
+                    output_filename = datetime.now().strftime('waveform_%Y%m%d-%H%M%S.csv')
+                    logging.info(f"Output filename not specified, using {output_filename}")
 
                 waveform_data = device.get_waveform()
                 if waveform_data and waveform_data.channels:
-                    export_to_csv(waveform_data, args.output)
+                    export_to_csv(waveform_data, output_filename)
                 else:
                     logging.error("Could not export CSV: No waveform data was acquired or parsed.")
                 return
