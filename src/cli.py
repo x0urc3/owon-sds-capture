@@ -104,16 +104,34 @@ def main():
             # Handle Waveform Acquisition first as it's a primary action
             if args.get_waveform:
                 from datetime import datetime
-                output_filename = args.output
-                if not output_filename:
-                    output_filename = datetime.now().strftime('waveform_%Y%m%d-%H%M%S.csv')
-                    logging.info(f"Output filename not specified, using {output_filename}")
+                import os
 
-                waveform_data = device.get_waveform()
-                if waveform_data and waveform_data.channels:
-                    export_to_csv(waveform_data, output_filename)
+                output_filename = args.output
+                # Determine correct extension
+                ext = args.format
+
+                if not output_filename:
+                    output_filename = datetime.now().strftime(f'waveform_%Y%m%d-%H%M%S.{ext}')
+                    logging.info(f"Output filename not specified, using {output_filename}")
                 else:
-                    logging.error("Could not export CSV: No waveform data was acquired or parsed.")
+                    # Check and fix extension if user provided a filename
+                    base, current_ext = os.path.splitext(output_filename)
+                    if current_ext.lower().strip('.') != ext:
+                        output_filename = f"{base}.{ext}"
+                        logging.warning(f"Filename extension corrected for format '{ext}'. New filename: '{output_filename}'")
+
+                if args.format == 'csv':
+                    waveform_data = device.get_waveform()
+                    if waveform_data and waveform_data.channels:
+                        export_to_csv(waveform_data, output_filename)
+                    else:
+                        logging.error("Could not export CSV: No waveform data was acquired or parsed.")
+                elif args.format == 'bin':
+                    raw_data = device.get_waveform_raw()
+                    if raw_data:
+                        export_to_binary(raw_data, output_filename)
+                    else:
+                        logging.error("Could not export binary: No raw data was acquired.")
                 return
 
             # Handle Trigger Configuration first as it's complex

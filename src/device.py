@@ -290,7 +290,7 @@ class SDSDevice:
             An OwonHeader object containing the parsed header, channel metadata, and data points.
         """
         logging.info(f"Starting waveform acquisition in '{mode}' mode...")
-        raw_data = self._acquire_raw_data(mode)
+        raw_data = self.get_waveform_raw(mode)
 
         if not raw_data:
             logging.error("Failed to acquire waveform data (received empty response).")

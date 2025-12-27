@@ -239,3 +239,11 @@ def export_to_csv(header: OwonHeader, file_path: str):
             f.write(",".join(row) + '\n')
 
     logging.info("CSV export complete.")
+
+
+def export_to_binary(raw_data: bytes, file_path: str):
+    """Exports the raw waveform data to a binary file."""
+    logging.info(f"Exporting raw waveform data to {file_path}...")
+    with open(file_path, 'wb') as f:
+        f.write(raw_data)
+    logging.info("Binary export complete.")
