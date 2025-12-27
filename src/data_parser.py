@@ -108,7 +108,7 @@ def _sample_id_to_time(channel: OwonChannel, sample_index: int) -> float:
         return 0.0
     return channel.time_div * 10.0 * sample_index / channel.samples_count
 
-def parse_response_header(header_data: bytes) -> tuple[int, int, int]:
+def parse_header(header_data: bytes) -> tuple[int, int, int]:
     """Parses the 12-byte response header from the device.
 
     :param header_data: The 12-byte header data.

@@ -20,7 +20,7 @@ import struct
 import time
 
 import constants
-from data_parser import OwonHeader, parse_waveform_data
+from data_parser import OwonHeader, parse_header, parse_waveform_data
 from usb.core import USBError
 from usb_interface import USBInterface
 
@@ -231,7 +231,7 @@ class SDSDevice:
             header_data = self.usb.read(12, timeout=5000)
             logging.debug(f"Received response header: {header_data}")
 
-            length, unknown, flag = struct.unpack_from('<III', header_data)
+            length, unknown, flag = parse_header(header_data)
             logging.debug(f"Response: length={length}, unknown={unknown}, flag={flag}")
 
             if length == 0:
