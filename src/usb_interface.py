@@ -1,6 +1,6 @@
 """
-owon-sds-grok
-Copyright (C) 2025 Khairulmizam <xource@gmail.com>
+owon-sds-capture
+Copyright (C) 2025 Khairulmizam Samsudin <xource@gmail.com>
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -21,9 +21,7 @@ import constants
 import logging
 
 class USBInterface:
-    """
-    A class to manage USB communication with the Owon oscilloscope.
-    """
+    """A class to manage USB communication with the Owon oscilloscope."""
 
     def __init__(self, vendor_id: int = constants.USB_VENDOR_ID, product_id: int = constants.USB_PRODUCT_ID):
         """
@@ -39,10 +37,7 @@ class USBInterface:
         self.kernel_driver_active = False
 
     def connect(self) -> None:
-        """
-        Finds the USB device, detaches the kernel driver if necessary,
-        and claims the interface.
-        """
+        """Finds the USB device, detaches the kernel driver if necessary, and claims the interface."""
         logging.info(f"Searching for device with VID={hex(self.vendor_id)} PID={hex(self.product_id)}...")
         self.device = usb.core.find(idVendor=self.vendor_id, idProduct=self.product_id)
 
@@ -85,11 +80,9 @@ class USBInterface:
 
 
     def write(self, data: bytes) -> None:
-        """
-        Sends data to the device's bulk write endpoint.
+        """Sends data to the device's bulk write endpoint.
 
-        Args:
-            data: The bytes to send to the oscilloscope.
+        :param data: The bytes to send to the oscilloscope.
         """
         if self.device is None:
             raise ConnectionError("Device not connected. Cannot write data.")

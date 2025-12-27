@@ -208,17 +208,11 @@ class SDSDevice:
     def get_waveform_raw(self, mode: str = 'bin') -> bytes:
         """
         Requests and reads a raw data block (e.g., waveform) from the oscilloscope.
-        This function is a Python port of the logic in `owon_usb_read` from the C project.
 
-        Args:
-            mode: The type of data to acquire ('bin', 'bmp', etc.).
-
-        Returns:
-            A bytes object containing the complete raw data from the device.
-
-        Raises:
-            ValueError: If the acquisition mode is invalid.
-            ConnectionError: If there's a problem communicating with the device.
+        :param mode: The type of data to acquire ('bin', 'bmp', etc.).
+        :return: A bytes object containing the complete raw data from the device.
+        :raises ValueError: If the acquisition mode is invalid.
+        :raises ConnectionError: If there's a problem communicating with the device.
         """
         try:
             start_command = constants.CMD_ACQ[mode.upper()].value

@@ -108,11 +108,11 @@ def _sample_id_to_time(channel: OwonChannel, sample_index: int) -> float:
         return 0.0
     return channel.time_div * 10.0 * sample_index / channel.samples_count
 
-
 def parse_response_header(header_data: bytes) -> tuple[int, int, int]:
-    """
-    Parses the 12-byte response header from the device.
-    As seen in owon_get_response and owon_usb_read in the C code.
+    """Parses the 12-byte response header from the device.
+
+    :param header_data: The 12-byte header data.
+    :return: A tuple containing the length, unknown value, and flag.
     """
     length, unknown, flag = struct.unpack_from('<III', header_data)
     logging.debug(f"Response: length={length}, unknown={unknown}, flag={flag}")
@@ -121,7 +121,6 @@ def parse_response_header(header_data: bytes) -> tuple[int, int, int]:
 def parse_waveform_data(raw_data: bytes) -> OwonHeader:
     """
     Parses a raw binary data block from the oscilloscope into a structured OwonHeader object.
-    This is a Python port of the `owon_parse` function from the C project.
     """
     offset = 0
     header = OwonHeader()
@@ -207,9 +206,12 @@ def parse_waveform_data(raw_data: bytes) -> OwonHeader:
     return header
 
 def export_to_csv(header: OwonHeader, file_path: str):
-    """
-    Exports the parsed waveform data to a CSV file.
-    This is a Python port of the `owon_output_csv` function from the C project.
+    """Exports the parsed waveform data to a CSV file.
+
+    This is a Python port of the ``owon_output_csv`` function from the C project.
+
+    :param header: The OwonHeader object containing the waveform data.
+    :param file_path: The path to the output CSV file.
     """
     if not header.channels:
         logging.warning("No channel data to export.")
@@ -237,7 +239,6 @@ def export_to_csv(header: OwonHeader, file_path: str):
             f.write(",".join(row) + '\n')
 
     logging.info("CSV export complete.")
-
 
 def export_to_binary(raw_data: bytes, file_path: str):
     """Exports the raw waveform data to a binary file."""
