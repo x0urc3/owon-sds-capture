@@ -205,7 +205,7 @@ class SDSDevice:
 
         self._send_command(bytes(cmd))
 
-    def _acquire_raw_data(self, mode: str = 'bin') -> bytes:
+    def get_waveform_raw(self, mode: str = 'bin') -> bytes:
         """
         Requests and reads a raw data block (e.g., waveform) from the oscilloscope.
         This function is a Python port of the logic in `owon_usb_read` from the C project.
