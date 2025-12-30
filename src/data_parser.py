@@ -61,7 +61,8 @@ class OwonHeader:
 
 _ATTENUATION_TABLE = [1.0e0, 1.0e1, 1.0e2, 1.0e3]
 _VOLT_TABLE = [
-    2.0e-2, 5.0e-2,  # 10 mV
+    2.0e-3, 5.0e-3,          # 2 mV
+    1.0e-2, 2.0e-2, 5.0e-2,  # 10 mV
     1.0e-1, 2.0e-1, 5.0e-1,  # 100 mV
     1.0e+0, 2.0e+0, 5.0e+0,  # 1 V
     1.0e+1, 2.0e+1, 5.0e+1,  # 10 V
@@ -90,15 +91,8 @@ def _get_real_from_table(table: list, index: int) -> float:
 
 def _sample_to_volt(channel: OwonChannel, sample_value: int) -> float:
     """Converts a raw sample value to volts."""
-    # The formula from parse.c: val * 2.0 * header->channels[channel]->voltsdiv / 5.0
-    # This seems incorrect based on typical oscilloscope scaling.
-    # A more standard formula is (sample_value / (points_per_division / 2)) * volts_per_division
-    # Assuming 25 points per division vertically (common for 8-bit ADCs over a grid).
-    # Let's stick to the C code's formula for a direct port, but be aware it might need adjustment.
-    # The C code casts the data to int8_t, so we should handle the sign.
-    if sample_value > 127:
-        sample_value -= 256
-    return sample_value * channel.volts_div * channel.attenuation / 25.0
+    val = sample_value / 127.0 * 5.0 * channel.volts_div
+    return val
 
 def _sample_id_to_time(channel: OwonChannel, sample_index: int) -> float:
     """Converts a sample index to a time value."""
@@ -133,7 +127,7 @@ def parse_waveform_data(raw_data: bytes) -> OwonHeader:
 
     # Read model (6 bytes + null terminator)
     header.model = raw_data[offset:offset+6].decode('ascii', errors='ignore').strip('\x00')
-    offset += 7
+    offset += 6
 
     header.int_size = struct.unpack_from('<i', raw_data, offset)[0]
     offset += 4
@@ -158,7 +152,7 @@ def parse_waveform_data(raw_data: bytes) -> OwonHeader:
         ch = OwonChannel()
 
         ch.name = raw_data[offset:offset+3].decode('ascii', errors='ignore').strip('\x00')
-        offset += 4
+        offset += 3
 
         ch.unknown_int, ch.datatype = struct.unpack_from('<ii', raw_data, offset)
         offset += 8
@@ -168,14 +162,11 @@ def parse_waveform_data(raw_data: bytes) -> OwonHeader:
         ch.samples_count, ch.samples_file, ch.samples_3 = struct.unpack_from('<III', raw_data, offset)
         offset += 12
 
-        time_div_idx, volts_div_idx, atten_idx = struct.unpack_from('<III', raw_data, offset)
+        time_div_idx, ch.offset_y, volts_div_idx, atten_idx = struct.unpack_from('<IiII', raw_data, offset)
         ch.time_div = _get_real_from_table(_TIMESCALE_TABLE, time_div_idx)
         ch.volts_div = _get_real_from_table(_VOLT_TABLE, volts_div_idx)
         ch.attenuation = _get_real_from_table(_ATTENUATION_TABLE, atten_idx)
-        offset += 12
-
-        ch.offset_y = struct.unpack_from('<i', raw_data, offset)[0]
-        offset += 4
+        offset += 16
 
         ch.time_mul, ch.frequency, ch.period, ch.volts_mul = struct.unpack_from('<ffff', raw_data, offset)
         offset += 16
@@ -207,8 +198,6 @@ def parse_waveform_data(raw_data: bytes) -> OwonHeader:
 
 def export_to_csv(header: OwonHeader, file_path: str):
     """Exports the parsed waveform data to a CSV file.
-
-    This is a Python port of the ``owon_output_csv`` function from the C project.
 
     :param header: The OwonHeader object containing the waveform data.
     :param file_path: The path to the output CSV file.
