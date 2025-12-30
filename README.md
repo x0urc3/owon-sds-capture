@@ -47,9 +47,6 @@ owon-sds-capture --help
 # Perform an auto-set
 owon-sds-capture --autoset
 
-# Revert to factory settings
-owon-sds-capture --factory
-
 # Force a trigger event
 owon-sds-capture --trigger force
 
@@ -67,9 +64,13 @@ owon-sds-capture --acq-mode PEAK_DETECT
 
 # Configure an edge trigger for Channel 1
 owon-sds-capture --trigger-type 1 edge --trigger-mode SINGLE --trigger-slope FALLING
+
+# Capture waveform and save to a CSV file
+owon-sds-capture --get-waveform --output waveform.csv --format csv
 ```
 
 ## Acknowledgements
 
-The OWON SDS USB protocol command definitions were adapted from the [owoncontrol](https://github.com/7oxicshadow/owoncontrol) project by 7oxicshadow. This Python port would not have been possible without this foundational work.
+*   The OWON SDS USB protocol command definitions were adapted from the [owoncontrol](https://github.com/7oxicshadow/owoncontrol) project by 7oxicshadow. This Python port would not have been possible without this foundational work.
+*   The USB protocol for dumping and decoding captured waveforms was adapted from the [owon-sds7102-protocol](https://github.com/bjonnh/owon-sds7102-protocol) project by bjonnh.
 

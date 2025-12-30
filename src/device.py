@@ -1,6 +1,6 @@
 """
-owon-sds-grok
-Copyright (C) 2025 Khairulmizam <xource@gmail.com>
+owon-sds-capture
+Copyright (C) 2025 Khairulmizam Samsudin <xource@gmail.com>
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -15,12 +15,16 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-import struct
 import logging
+import struct
+import time
+
 import constants
+from data_parser import OwonHeader, parse_header, parse_waveform_data
+from usb.core import USBError
 from usb_interface import USBInterface
 
-class OwonDevice:
+class SDSDevice:
     """
     A high-level controller for the Owon PDS series oscilloscope.
     """
@@ -200,6 +204,98 @@ class OwonDevice:
             cmd[21] = sync.value
 
         self._send_command(bytes(cmd))
+
+    def get_waveform_raw(self, mode: str = 'bin') -> bytes:
+        """
+        Requests and reads a raw data block (e.g., waveform) from the oscilloscope.
+
+        :param mode: The type of data to acquire ('bin', 'bmp', etc.).
+        :return: A bytes object containing the complete raw data from the device.
+        :raises ValueError: If the acquisition mode is invalid.
+        :raises ConnectionError: If there's a problem communicating with the device.
+        """
+        try:
+            start_command = constants.CMD_ACQ[mode.upper()].value
+        except KeyError:
+            valid_modes = [m.name.lower() for m in constants.CMD_ACQ]
+            raise ValueError(f"Invalid acquisition mode '{mode}'. Valid modes are: {valid_modes}") from None
+
+        logging.info(f"Sending data acquisition command: {start_command.decode()}")
+        self.usb.write(start_command)
+
+        # Allow a moment for the device to process the command before reading the header
+        time.sleep(0.1)
+
+        try:
+            # Read the 12-byte response header
+            header_data = self.usb.read(12, timeout=5000)
+            logging.debug(f"Received response header: {header_data}")
+
+            length, unknown, flag = parse_header(header_data)
+            logging.debug(f"Response: length={length}, unknown={unknown}, flag={flag}")
+
+            if length == 0:
+                logging.warning("Device reported a data length of 0. Aborting.")
+                return b''
+
+            # The C code suggests a flag > 128 indicates a multi-part transfer.
+            is_multipart = flag > 128
+            if is_multipart:
+                logging.info("Multi-part transfer detected.")
+
+            # Read the data block
+            data_buffer = bytearray()
+            total_read = 0
+
+            while total_read < length:
+                bytes_to_read = min(length - total_read, 131072) # Read in chunks
+                try:
+                    chunk = self.usb.read(bytes_to_read, timeout=10000)
+                    data_buffer.extend(chunk)
+                    total_read += len(chunk)
+                    logging.debug(f"Read {len(chunk)} bytes. Total read: {total_read}/{length}")
+                except USBError as e:
+                    if e.errno == 110: # Timeout error
+                        logging.warning("Read operation timed out. The device may have sent less data than expected.")
+                        break
+                    else:
+                        raise ConnectionError(f"USB error during data read: {e}") from e
+
+            logging.info(f"Data acquisition complete. Total bytes received: {total_read}")
+
+            return bytes(data_buffer)
+
+        except USBError as e:
+            if e.errno == 110: # Timeout error on header read
+                raise ConnectionError("Timeout waiting for device response header. Is the device ready?") from e
+            else:
+                raise ConnectionError(f"A USB error occurred: {e}") from e
+        except Exception as e:
+            raise IOError(f"An unexpected error occurred during data acquisition: {e}") from e
+
+    def get_waveform(self, mode: str = 'bin') -> OwonHeader:
+        """
+        Acquires, parses, and returns the waveform data from the oscilloscope.
+
+        Args:
+            mode: The type of data to acquire ('bin' for waveform, 'bmp' for screenshot).
+
+        Returns:
+            An OwonHeader object containing the parsed header, channel metadata, and data points.
+        """
+        logging.info(f"Starting waveform acquisition in '{mode}' mode...")
+        raw_data = self.get_waveform_raw(mode)
+
+        if not raw_data:
+            logging.error("Failed to acquire waveform data (received empty response).")
+            # Return an empty header object to avoid crashes
+            return OwonHeader()
+
+        logging.info("Raw data acquired. Parsing waveform data...")
+        parsed_data = parse_waveform_data(raw_data)
+        logging.info("Waveform data parsed successfully.")
+
+        return parsed_data
 
     def __enter__(self):
         """Context manager entry point."""

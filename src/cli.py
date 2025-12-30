@@ -1,6 +1,6 @@
 """
-owon-sds-grok
-Copyright (C) 2025 Khairulmizam <xource@gmail.com>
+owon-sds-capture
+Copyright (C) 2025 Khairulmizam Samsudin <xource@gmail.com>
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -48,6 +48,15 @@ def main():
     parser.add_argument("--acq-mode", type=str, choices=[m.name for m in constants.AcquisitionMode], help="Set acquisition mode.")
     parser.add_argument("--acq-samples", type=str, choices=[s.name for s in constants.AverageSamples], default='SAMPLES_16', help="Set number of samples for Average mode. Used only with --acq-mode AVERAGE. Defaults to SAMPLES_16.")
 
+    # --- Data Acquisition Arguments ---
+    acquisition_group = parser.add_argument_group('Data Acquisition', 'Arguments for acquiring waveform data.')
+    acquisition_group.add_argument("--get-waveform", action="store_true",
+                                   help="Acquire waveform data from the oscilloscope.")
+    acquisition_group.add_argument("--output", type=str, metavar='<filename>',
+                                   help="Output file to save waveform data. If omitted, a timestamped filename is generated.")
+    acquisition_group.add_argument("--format", type=str, choices=['csv', 'bin'], default='csv',
+                                   help="Output format for waveform data. 'csv' for processed data, 'bin' for raw data. Defaults to csv.")
+
     # --- Trigger Configuration Arguments ---
     trigger_group = parser.add_argument_group('Trigger Configuration', 'Arguments for setting up edge or video triggers.')
     trigger_group.add_argument("--trigger-type", nargs=2, metavar=('CHANNEL', 'TYPE'),
@@ -89,10 +98,44 @@ def main():
 
     # Import device and usb after setting up logging and environment
     import usb.core
-    from device import OwonDevice
+    from device import SDSDevice
+    from data_parser import export_to_csv, export_to_binary
 
     try:
-        with OwonDevice() as device:
+        with SDSDevice() as device:
+            # Handle Waveform Acquisition first as it's a primary action
+            if args.get_waveform:
+                from datetime import datetime
+                import os
+
+                output_filename = args.output
+                # Determine correct extension
+                ext = args.format
+
+                if not output_filename:
+                    output_filename = datetime.now().strftime(f'waveform_%Y%m%d-%H%M%S.{ext}')
+                    logging.info(f"Output filename not specified, using {output_filename}")
+                else:
+                    # Check and fix extension if user provided a filename
+                    base, current_ext = os.path.splitext(output_filename)
+                    if current_ext.lower().strip('.') != ext:
+                        output_filename = f"{base}.{ext}"
+                        logging.warning(f"Filename extension corrected for format '{ext}'. New filename: '{output_filename}'")
+
+                if args.format == 'csv':
+                    waveform_data = device.get_waveform()
+                    if waveform_data and waveform_data.channels:
+                        export_to_csv(waveform_data, output_filename)
+                    else:
+                        logging.error("Could not export CSV: No waveform data was acquired or parsed.")
+                elif args.format == 'bin':
+                    raw_data = device.get_waveform_raw()
+                    if raw_data:
+                        export_to_binary(raw_data, output_filename)
+                    else:
+                        logging.error("Could not export binary: No raw data was acquired.")
+                return
+
             # Handle Trigger Configuration first as it's complex
             if args.trigger_type:
                 channel_str, trigger_type = args.trigger_type
